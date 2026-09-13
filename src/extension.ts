@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { findUsedApiSignals, parsePlistKeys, findMissingUsageDescriptions } from './usageCheck';
+import { recordHit } from './reviewPrompt';
 
 let diagnostics: vscode.DiagnosticCollection;
 
@@ -8,7 +9,7 @@ async function findInfoPlist(): Promise<vscode.Uri | undefined> {
   return matches[0];
 }
 
-async function refreshWorkspace(): Promise<void> {
+async function refreshWorkspace(context: vscode.ExtensionContext): Promise<void> {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) return;
 
@@ -58,21 +59,24 @@ async function refreshWorkspace(): Promise<void> {
     return diagnostic;
   });
   diagnostics.set(plistUri, diags);
+  for (const m of missing) {
+    recordHit(context, `${plistUri.toString()}:${m.signal}`);
+  }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
   diagnostics = vscode.languages.createDiagnosticCollection('infoPlistUsageDescriptionCompanion');
   context.subscriptions.push(diagnostics);
 
-  void refreshWorkspace();
+  void refreshWorkspace(context);
 
   const watcher = vscode.workspace.createFileSystemWatcher('**/{*.swift,*.m,*.mm,Info.plist}');
   context.subscriptions.push(
     watcher,
-    watcher.onDidChange(() => void refreshWorkspace()),
-    watcher.onDidCreate(() => void refreshWorkspace()),
-    watcher.onDidDelete(() => void refreshWorkspace()),
-    vscode.commands.registerCommand('infoPlistUsageDescriptionCompanion.rescan', () => void refreshWorkspace()),
+    watcher.onDidChange(() => void refreshWorkspace(context)),
+    watcher.onDidCreate(() => void refreshWorkspace(context)),
+    watcher.onDidDelete(() => void refreshWorkspace(context)),
+    vscode.commands.registerCommand('infoPlistUsageDescriptionCompanion.rescan', () => void refreshWorkspace(context)),
   );
 }
 
