@@ -2,7 +2,7 @@
   "name": "infoplist-usage-description-companion",
   "displayName": "Info.plist Usage Description Companion",
   "description": "Cross-checks Swift/Objective-C imports (CoreLocation, Contacts, Photos, etc.) against required NS*UsageDescription keys in Info.plist -- a common cause of App Store Connect rejection. No data leaves your editor.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "GapHunterLabs",
   "icon": "images/icon.png",
   "license": "Apache-2.0",
